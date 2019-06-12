@@ -1,5 +1,5 @@
 use super::fq2::Fq2;
-use ff::{Field, PrimeField, PrimeFieldDecodingError, PrimeFieldRepr};
+use ff::{Rand, Field, PrimeField, PrimeFieldDecodingError, PrimeFieldRepr};
 
 // B coefficient of BLS12-381 curve, 4.
 pub const B_COEFF: Fq = Fq(FqRepr([
@@ -442,6 +442,7 @@ pub const NEGATIVE_ONE: Fq = Fq(FqRepr([
     0xef148d1ea0f4c069,
     0x40ab3263eff0206,
 ]));
+
 
 #[derive(PrimeField)]
 #[PrimeFieldModulus = "4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787"]
@@ -1173,7 +1174,10 @@ fn test_neg_one() {
 }
 
 #[cfg(test)]
-use rand::{Rand, SeedableRng, XorShiftRng};
+use rand::{SeedableRng};
+
+#[cfg(test)]
+use rand_xorshift::{XorShiftRng};
 
 #[test]
 fn test_fq_repr_ordering() {
@@ -1396,7 +1400,7 @@ fn test_fq_repr_num_bits() {
 
 #[test]
 fn test_fq_repr_sub_noborrow() {
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);  // from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
 
     let mut t = FqRepr([
         0x827a4a08041ebd9,
@@ -1483,7 +1487,7 @@ fn test_fq_repr_sub_noborrow() {
 
 #[test]
 fn test_fq_repr_add_nocarry() {
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);  // from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
 
     let mut t = FqRepr([
         0x827a4a08041ebd9,
@@ -1595,7 +1599,7 @@ fn test_fq_is_valid() {
         ])).is_valid()
     );
 
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);  // from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
 
     for _ in 0..1000 {
         let a = Fq::rand(&mut rng);
@@ -1708,7 +1712,7 @@ fn test_fq_add_assign() {
 
     // Test associativity
 
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);  // from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
 
     for _ in 0..1000 {
         // Generate a, b, c and ensure (a + b) + c == a + (b + c).
@@ -1818,7 +1822,7 @@ fn test_fq_sub_assign() {
         );
     }
 
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);  // from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
 
     for _ in 0..1000 {
         // Ensure that (a - b) + (b - a) = 0.
@@ -1865,7 +1869,7 @@ fn test_fq_mul_assign() {
         ]))
     );
 
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);  // from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
 
     for _ in 0..1000000 {
         // Ensure that (a * b) * c = a * (b * c)
@@ -1932,7 +1936,7 @@ fn test_fq_squaring() {
         ])).unwrap()
     );
 
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);  // from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
 
     for _ in 0..1000000 {
         // Ensure that (a * a) = a^2
@@ -1952,7 +1956,7 @@ fn test_fq_squaring() {
 fn test_fq_inverse() {
     assert!(Fq::zero().inverse().is_none());
 
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);  // from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
 
     let one = Fq::one();
 
@@ -1967,7 +1971,7 @@ fn test_fq_inverse() {
 
 #[test]
 fn test_fq_double() {
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);  // from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
 
     for _ in 0..1000 {
         // Ensure doubling a is equivalent to adding a to itself.
@@ -1988,7 +1992,7 @@ fn test_fq_negate() {
         assert!(a.is_zero());
     }
 
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);  // from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
 
     for _ in 0..1000 {
         // Ensure (a - (-a)) = 0.
@@ -2003,7 +2007,7 @@ fn test_fq_negate() {
 
 #[test]
 fn test_fq_pow() {
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);  // from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
 
     for i in 0..1000 {
         // Exponentiate by various small numbers and ensure it consists with repeated
@@ -2029,7 +2033,7 @@ fn test_fq_pow() {
 fn test_fq_sqrt() {
     use ff::SqrtField;
 
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);  // from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
 
     assert_eq!(Fq::zero().sqrt().unwrap(), Fq::zero());
 
@@ -2108,7 +2112,7 @@ fn test_fq_from_into_repr() {
     // Zero should be in the field.
     assert!(Fq::from_repr(FqRepr::from(0)).unwrap().is_zero());
 
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);  // from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
 
     for _ in 0..1000 {
         // Try to turn Fq elements into representations and back again, and compare.

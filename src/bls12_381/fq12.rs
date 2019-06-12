@@ -1,8 +1,8 @@
 use super::fq::FROBENIUS_COEFF_FQ12_C1;
 use super::fq2::Fq2;
 use super::fq6::Fq6;
-use ff::Field;
-use rand::{Rand, Rng};
+use ff::{Rand, Field};
+use rand::Rng;
 
 /// An element of Fq12, represented by c0 + c1 * w.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -18,11 +18,17 @@ impl ::std::fmt::Display for Fq12 {
 }
 
 impl Rand for Fq12 {
-    fn rand<R: Rng>(rng: &mut R) -> Self {
+    fn rand<R: Rng + ?Sized>(rng: &mut R) -> Self {
         Fq12 {
             c0: rng.gen(),
             c1: rng.gen(),
         }
+    }
+}
+
+impl ::rand::distributions::Distribution<Fq12> for ::rand::distributions::Standard {
+    fn sample<R: ::rand::Rng + ?Sized>(&self, rng: &mut R) -> Fq12 {
+        Fq12::rand(rng)
     }
 }
 
@@ -149,11 +155,12 @@ impl Field for Fq12 {
 }
 
 #[cfg(test)]
-use rand::{SeedableRng, XorShiftRng};
+use rand::{SeedableRng};
+use rand_xorshift::{XorShiftRng};
 
 #[test]
 fn test_fq12_mul_by_014() {
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
 
     for _ in 0..1000 {
         let c0 = Fq2::rand(&mut rng);

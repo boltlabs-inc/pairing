@@ -1,7 +1,7 @@
 use super::fq::{FROBENIUS_COEFF_FQ6_C1, FROBENIUS_COEFF_FQ6_C2};
 use super::fq2::Fq2;
-use ff::Field;
-use rand::{Rand, Rng};
+use ff::{Field, Rand};
+use rand::{Rng};
 
 /// An element of Fq6, represented by c0 + c1 * v + c2 * v^(2).
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -18,7 +18,7 @@ impl ::std::fmt::Display for Fq6 {
 }
 
 impl Rand for Fq6 {
-    fn rand<R: Rng>(rng: &mut R) -> Self {
+    fn rand<R: Rng + ?Sized>(rng: &mut R) -> Self {
         Fq6 {
             c0: rng.gen(),
             c1: rng.gen(),
@@ -26,6 +26,13 @@ impl Rand for Fq6 {
         }
     }
 }
+
+impl ::rand::distributions::Distribution<Fq6> for ::rand::distributions::Standard {
+    fn sample<R: ::rand::Rng + ?Sized>(&self, rng: &mut R) -> Fq6 {
+        Fq6::rand(rng)
+    }
+}
+
 
 impl Fq6 {
     /// Multiply by quadratic nonresidue v.
@@ -302,11 +309,12 @@ impl Field for Fq6 {
 }
 
 #[cfg(test)]
-use rand::{SeedableRng, XorShiftRng};
+use rand::{SeedableRng};
+use rand_xorshift::{XorShiftRng};
 
 #[test]
 fn test_fq6_mul_nonresidue() {
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
 
     let nqr = Fq6 {
         c0: Fq2::zero(),
@@ -326,7 +334,7 @@ fn test_fq6_mul_nonresidue() {
 
 #[test]
 fn test_fq6_mul_by_1() {
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
 
     for _ in 0..1000 {
         let c1 = Fq2::rand(&mut rng);
@@ -346,7 +354,7 @@ fn test_fq6_mul_by_1() {
 
 #[test]
 fn test_fq6_mul_by_01() {
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
 
     for _ in 0..1000 {
         let c0 = Fq2::rand(&mut rng);

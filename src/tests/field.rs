@@ -1,8 +1,9 @@
-use ff::{Field, LegendreSymbol, PrimeField, SqrtField};
-use rand::{Rng, SeedableRng, XorShiftRng};
+use ff::{Rand, Field, LegendreSymbol, PrimeField, SqrtField};
+use rand::{Rng, SeedableRng};
+use rand_xorshift::XorShiftRng;
 
 pub fn random_frobenius_tests<F: Field, C: AsRef<[u64]>>(characteristic: C, maxpower: usize) {
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
 
     for _ in 0..100 {
         for i in 0..(maxpower + 1) {
@@ -20,7 +21,7 @@ pub fn random_frobenius_tests<F: Field, C: AsRef<[u64]>>(characteristic: C, maxp
 }
 
 pub fn random_sqrt_tests<F: SqrtField>() {
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
 
     for _ in 0..10000 {
         let a = F::rand(&mut rng);
@@ -54,7 +55,7 @@ pub fn random_sqrt_tests<F: SqrtField>() {
 }
 
 pub fn random_field_tests<F: Field>() {
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
 
     random_multiplication_tests::<F, _>(&mut rng);
     random_addition_tests::<F, _>(&mut rng);
@@ -106,7 +107,7 @@ pub fn from_str_tests<F: PrimeField>() {
     }
 
     {
-        let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+        let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
 
         for _ in 0..1000 {
             let n: u64 = rng.gen();

@@ -197,7 +197,7 @@ macro_rules! curve_impl {
         }
 
         impl Rand for $projective {
-            fn rand<R: Rng>(rng: &mut R) -> Self {
+            fn rand<R: Rng + ?Sized>(rng: &mut R) -> Self {
                 loop {
                     let x = rng.gen();
                     let greatest = rng.gen();
@@ -210,6 +210,12 @@ macro_rules! curve_impl {
                         }
                     }
                 }
+            }
+        }
+
+        impl ::rand::distributions::Distribution<$projective> for ::rand::distributions::Standard {
+            fn sample<R: ::rand::Rng + ?Sized>(&self, rng: &mut R) -> $projective {
+                $projective::rand(rng)
             }
         }
 
@@ -623,8 +629,8 @@ macro_rules! curve_impl {
 pub mod g1 {
     use super::super::{Bls12, Fq, Fq12, FqRepr, Fr, FrRepr};
     use super::g2::G2Affine;
-    use ff::{BitIterator, Field, PrimeField, PrimeFieldRepr, SqrtField};
-    use rand::{Rand, Rng};
+    use ff::{Rand, BitIterator, Field, PrimeField, PrimeFieldRepr, SqrtField};
+    use rand::Rng;
     use std::fmt;
     use {CurveAffine, CurveProjective, EncodedPoint, Engine, GroupDecodingError};
 
@@ -1268,8 +1274,8 @@ pub mod g1 {
 pub mod g2 {
     use super::super::{Bls12, Fq, Fq12, Fq2, FqRepr, Fr, FrRepr};
     use super::g1::G1Affine;
-    use ff::{BitIterator, Field, PrimeField, PrimeFieldRepr, SqrtField};
-    use rand::{Rand, Rng};
+    use ff::{Rand, BitIterator, Field, PrimeField, PrimeFieldRepr, SqrtField};
+    use rand::Rng;
     use std::fmt;
     use {CurveAffine, CurveProjective, EncodedPoint, Engine, GroupDecodingError};
 

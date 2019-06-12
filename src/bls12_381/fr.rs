@@ -1,4 +1,4 @@
-use ff::{Field, PrimeField, PrimeFieldDecodingError, PrimeFieldRepr};
+use ff::{Field, PrimeField, PrimeFieldDecodingError, PrimeFieldRepr, Rand};
 
 #[derive(PrimeField)]
 #[PrimeFieldModulus = "52435875175126190479447740508185965837690552500527637822603658699938581184513"]
@@ -6,7 +6,8 @@ use ff::{Field, PrimeField, PrimeFieldDecodingError, PrimeFieldRepr};
 pub struct Fr(FrRepr);
 
 #[cfg(test)]
-use rand::{Rand, SeedableRng, XorShiftRng};
+use rand::{SeedableRng};
+use rand_xorshift::XorShiftRng;
 
 #[test]
 fn test_fr_repr_ordering() {
@@ -197,7 +198,7 @@ fn test_fr_repr_num_bits() {
 
 #[test]
 fn test_fr_repr_sub_noborrow() {
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
 
     let mut t = FrRepr([
         0x8e62a7e85264e2c3,
@@ -296,7 +297,7 @@ fn test_fr_legendre() {
 
 #[test]
 fn test_fr_repr_add_nocarry() {
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
 
     let mut t = FrRepr([
         0xd64f669809cbc6a4,
@@ -397,7 +398,7 @@ fn test_fr_is_valid() {
         ])).is_valid()
     );
 
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
 
     for _ in 0..1000 {
         let a = Fr::rand(&mut rng);
@@ -492,7 +493,7 @@ fn test_fr_add_assign() {
 
     // Test associativity
 
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
 
     for _ in 0..1000 {
         // Generate a, b, c and ensure (a + b) + c == a + (b + c).
@@ -586,7 +587,7 @@ fn test_fr_sub_assign() {
         );
     }
 
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
 
     for _ in 0..1000 {
         // Ensure that (a - b) + (b - a) = 0.
@@ -627,7 +628,7 @@ fn test_fr_mul_assign() {
         ]))
     );
 
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
 
     for _ in 0..1000000 {
         // Ensure that (a * b) * c = a * (b * c)
@@ -690,7 +691,7 @@ fn test_fr_squaring() {
         ])).unwrap()
     );
 
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
 
     for _ in 0..1000000 {
         // Ensure that (a * a) = a^2
@@ -710,7 +711,7 @@ fn test_fr_squaring() {
 fn test_fr_inverse() {
     assert!(Fr::zero().inverse().is_none());
 
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
 
     let one = Fr::one();
 
@@ -725,7 +726,7 @@ fn test_fr_inverse() {
 
 #[test]
 fn test_fr_double() {
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
 
     for _ in 0..1000 {
         // Ensure doubling a is equivalent to adding a to itself.
@@ -746,7 +747,7 @@ fn test_fr_negate() {
         assert!(a.is_zero());
     }
 
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
 
     for _ in 0..1000 {
         // Ensure (a - (-a)) = 0.
@@ -761,7 +762,7 @@ fn test_fr_negate() {
 
 #[test]
 fn test_fr_pow() {
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
 
     for i in 0..1000 {
         // Exponentiate by various small numbers and ensure it consists with repeated
@@ -787,7 +788,7 @@ fn test_fr_pow() {
 fn test_fr_sqrt() {
     use ff::SqrtField;
 
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
 
     assert_eq!(Fr::zero().sqrt().unwrap(), Fr::zero());
 
@@ -858,7 +859,7 @@ fn test_fr_from_into_repr() {
     // Zero should be in the field.
     assert!(Fr::from_repr(FrRepr::from(0)).unwrap().is_zero());
 
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
 
     for _ in 0..1000 {
         // Try to turn Fr elements into representations and back again, and compare.

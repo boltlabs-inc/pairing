@@ -1,5 +1,5 @@
-use rand::{Rand, SeedableRng, XorShiftRng};
-
+use rand::{Rand, SeedableRng};
+use rand_xorshift::{XorShiftRng};
 use ff::{Field, SqrtField};
 use pairing::bls12_381::*;
 

@@ -15,6 +15,10 @@ extern crate byteorder;
 #[macro_use]
 extern crate ff;
 extern crate rand;
+extern crate rand_xorshift;
+
+//#[cfg(test)]
+//extern crate rand_xorshift;
 
 #[cfg(test)]
 pub mod tests;
@@ -24,7 +28,7 @@ pub mod bls12_381;
 mod wnaf;
 pub use self::wnaf::Wnaf;
 
-use ff::{Field, PrimeField, PrimeFieldDecodingError, PrimeFieldRepr, ScalarEngine, SqrtField};
+use ff::{Rand, Field, PrimeField, PrimeFieldDecodingError, PrimeFieldRepr, ScalarEngine, SqrtField};
 use std::error::Error;
 use std::fmt;
 
@@ -118,7 +122,7 @@ pub trait CurveProjective:
     + Sync
     + fmt::Debug
     + fmt::Display
-    + rand::Rand
+    + Rand
     + 'static
 {
     type Engine: Engine<Fr = Self::Scalar>;
