@@ -1,7 +1,7 @@
 use ff::{Field, Rand};
 use rand::{Rng, SeedableRng};
 use rand_xorshift::XorShiftRng;
-
+use rand::distributions::Standard;
 
 use {CurveAffine, CurveProjective, EncodedPoint};
 
@@ -132,7 +132,7 @@ fn random_wnaf_tests<G: CurveProjective>() {
                 let mut wnaf = Wnaf::new();
                 {
                     // Populate the vectors.
-                    wnaf.base(rng.gen(), 1).scalar(rng.gen());
+                    wnaf.base(G::rand(&mut rng), 1).scalar(G::Scalar::rand(&mut rng).into_repr());
                 }
                 wnaf.base(g, 1).scalar(s)
             };
@@ -140,7 +140,7 @@ fn random_wnaf_tests<G: CurveProjective>() {
                 let mut wnaf = Wnaf::new();
                 {
                     // Populate the vectors.
-                    wnaf.base(rng.gen(), 1).scalar(rng.gen());
+                    wnaf.base(G::rand(&mut rng), 1).scalar(G::Scalar::rand(&mut rng).into_repr());
                 }
                 wnaf.scalar(s).base(g)
             };
@@ -148,7 +148,7 @@ fn random_wnaf_tests<G: CurveProjective>() {
                 let mut wnaf = Wnaf::new();
                 {
                     // Populate the vectors.
-                    wnaf.base(rng.gen(), 1).scalar(rng.gen());
+                    wnaf.base(G::rand(&mut rng), 1).scalar(G::Scalar::rand(&mut rng).into_repr());
                 }
                 let mut shared = wnaf.base(g, 1).shared();
 
@@ -160,7 +160,7 @@ fn random_wnaf_tests<G: CurveProjective>() {
                 let mut wnaf = Wnaf::new();
                 {
                     // Populate the vectors.
-                    wnaf.base(rng.gen(), 1).scalar(rng.gen());
+                    wnaf.base(G::rand(&mut rng), 1).scalar(G::Scalar::rand(&mut rng).into_repr());
                 }
                 let mut shared = wnaf.scalar(s).shared();
 
@@ -365,14 +365,16 @@ fn random_transformation_tests<G: CurveProjective>() {
             assert!(!i.is_normalized());
         }
 
-        use rand::distributions::{IndependentSample, Range};
-        let between = Range::new(0, 1000);
+        //use rand::distributions::{IndependentSample, Range};
+        //let between = Range::new(0, 1000);
+        use rand::distributions::{Distribution, Uniform};
+        let between = Uniform::from(0..1000);
         // Sprinkle in some normalized points
         for _ in 0..5 {
-            v[between.ind_sample(&mut rng)] = G::zero();
+            v[between.sample(&mut rng)] = G::zero();
         }
         for _ in 0..5 {
-            let s = between.ind_sample(&mut rng);
+            let s = between.sample(&mut rng);
             v[s] = v[s].into_affine().into_projective();
         }
 

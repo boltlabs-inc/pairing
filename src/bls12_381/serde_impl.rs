@@ -164,7 +164,8 @@ mod tests {
 
     #[test]
     fn serde_g1() {
-        let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+        let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
+
         let g: G1 = rng.gen();
         test_roundtrip(&g);
         test_roundtrip(&g.into_affine());
@@ -172,7 +173,7 @@ mod tests {
 
     #[test]
     fn serde_g2() {
-        let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+        let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
         let g: G2 = rng.gen();
         test_roundtrip(&g);
         test_roundtrip(&g.into_affine());
@@ -180,7 +181,7 @@ mod tests {
 
     #[test]
     fn serde_fr() {
-        let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+        let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
         let f: Fr = rng.gen();
         test_roundtrip(&f);
         test_roundtrip(&f.into_repr());
@@ -188,7 +189,7 @@ mod tests {
 
     #[test]
     fn serde_fq() {
-        let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+        let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
         let f: Fq = rng.gen();
         test_roundtrip(&f);
         test_roundtrip(&f.into_repr());
@@ -196,7 +197,7 @@ mod tests {
 
     #[test]
     fn serde_fq12() {
-        let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+        let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
         let f: Fq12 = rng.gen();
         test_roundtrip(&f);
     }
