@@ -18,6 +18,7 @@ repository = "https://github.com/ebfull/pairing"
 rand = "0.6"
 rand_xorshift = "0.1"
 byteorder = "1"
+hex = "0.3.2"
 #ff = { version = "0.4", features = ["derive"] }
 ff = { git = "https://github.com/boltlabs-inc/ff", branch = "master", features = ["derive"] }
 serde = { version = "1.0", optional = true, features = ["derive"] }
@@ -29,4 +30,3 @@ default = []
 
 [dev-dependencies]
 serde_json = "1.0"
-serde_bytes = "0.11"

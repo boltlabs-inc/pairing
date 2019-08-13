@@ -19,6 +19,7 @@ extern crate rand_xorshift;
 #[cfg(feature = "serde")]
 #[macro_use(Serialize, Deserialize)]
 extern crate serde;
+extern crate hex;
 
 #[cfg(test)]
 pub mod tests;

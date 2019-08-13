@@ -1,6 +1,6 @@
 use std::fmt;
 use std::marker::PhantomData;
-
+use hex;
 use super::{Fq, FqRepr, Fr, FrRepr, G1Affine, G2Affine, G1, G2};
 use {CurveAffine, CurveProjective, EncodedPoint, PrimeField};
 
@@ -61,11 +61,12 @@ impl<'de> Deserialize<'de> for G2Affine {
 /// Serializes a group element using its compressed representation.
 fn serialize_affine<S: Serializer, C: CurveAffine>(c: &C, s: S) -> Result<S::Ok, S::Error> {
     let len = C::Compressed::size();
-    let mut tup = s.serialize_tuple(len)?;
+    let mut w = String::new();
     for byte in c.into_compressed().as_ref() {
-        tup.serialize_element(byte)?;
+        let t = format!("{:02x}", byte);
+        w = w + &t;
     }
-    tup.end()
+    s.collect_str(&w)
 }
 
 /// Deserializes the compressed representation of a group element.
@@ -92,10 +93,27 @@ fn deserialize_affine<'de, D: Deserializer<'de>, C: CurveAffine>(d: D) -> Result
             let to_err = |_| DeserializeError::custom(ERR_CODE);
             compressed.into_affine().map_err(to_err)
         }
+
+        #[inline]
+        fn visit_str<E>(self, v: &str) -> Result<C, E>
+        where E: ::serde::de::Error,
+        {
+            let mut compressed = C::Compressed::empty();
+            let _len = C::Compressed::size();
+            //let len_err = || DeserializeError::invalid_length(len, &self);
+            let w = hex::decode(v).unwrap();
+            if (w.len() == _len) {
+                for (i, byte) in compressed.as_mut().iter_mut().enumerate() {
+                    *byte = w[i];
+                }
+            }
+            let to_err = |_| DeserializeError::custom(ERR_CODE);
+            compressed.into_affine().map_err(to_err)
+        }
+
     }
 
-    let len = C::Compressed::size();
-    d.deserialize_tuple(len, TupleVisitor { _ph: PhantomData })
+    d.deserialize_str(TupleVisitor{ _ph: PhantomData })
 }
 
 impl Serialize for Fr {
@@ -106,7 +124,8 @@ impl Serialize for Fr {
 
 impl<'de> Deserialize<'de> for Fr {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-        Fr::from_repr(FrRepr::deserialize(d)?).map_err(|_| D::Error::custom(ERR_CODE))
+        let fr = FrRepr::deserialize(d)?;
+        Fr::from_repr(fr).map_err(|_| D::Error::custom(ERR_CODE))
     }
 }
 
@@ -159,7 +178,12 @@ mod tests {
 
     fn test_roundtrip<T: Serialize + for<'a> Deserialize<'a> + Debug + PartialEq>(t: &T) {
         let ser = serde_json::to_vec(t).unwrap();
+        //println!("Bytes: {:?}", ser);
         assert_eq!(*t, serde_json::from_slice(&ser).unwrap());
+
+        let ser2 = serde_json::to_string(t).unwrap();
+        //println!("String: {}", ser2);
+        assert_eq!(*t, serde_json::from_str(&ser2).unwrap());
     }
 
     #[test]
@@ -185,6 +209,7 @@ mod tests {
         let f: Fr = rng.gen();
         test_roundtrip(&f);
         test_roundtrip(&f.into_repr());
+
     }
 
     #[test]
