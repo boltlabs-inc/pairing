@@ -8,7 +8,7 @@ use serde::de::{Error as DeserializeError, SeqAccess, Visitor};
 use serde::ser::SerializeTuple;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-const ERR_CODE: &str = "deserialized bytes don't encode a group element";
+const ERR_CODE: &str = "deserialized bytes do not encode a group element";
 
 impl Serialize for G1 {
     fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
