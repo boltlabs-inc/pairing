@@ -102,7 +102,7 @@ fn deserialize_affine<'de, D: Deserializer<'de>, C: CurveAffine>(d: D) -> Result
             let _len = C::Compressed::size();
             //let len_err = || DeserializeError::invalid_length(len, &self);
             let w = hex::decode(v).unwrap();
-            if (w.len() == _len) {
+            if w.len() == _len {
                 for (i, byte) in compressed.as_mut().iter_mut().enumerate() {
                     *byte = w[i];
                 }
@@ -156,12 +156,15 @@ impl Serialize for FrRepr {
         // self.0.serialize(s)
         let r = self.0;
         let len = r.as_ref().len();
-        let mut tup = s.serialize_tuple(len)?;
+        let mut tup = s.serialize_tuple(1)?;
+        let mut v = String::new();
         for byte in r.as_ref() {
             let byte_array = transform_u64_to_array_of_u8(*byte);
             let hex_str = hex::encode(&byte_array);
-            tup.serialize_element(&hex_str);
+            // tup.serialize_element(&hex_str);
+            v += &hex_str;
         }
+        tup.serialize_element(&v);
         tup.end()
     }
 }
@@ -183,15 +186,24 @@ impl<'de> Deserialize<'de> for FrRepr {
                 loop {
                     let tmp = seq.next_element::<String>();
                     if let Ok(Some(b)) = tmp {
-                        let c = hex::decode(b).to_owned();
-                        bytes.push( transform_bytes_to_u64(&c.unwrap()) );
+                        // TODO: error handling for len
+                        let str_tmp= [hex::decode(&b[0..16]).to_owned(),
+                                                                    hex::decode(&b[16..32]).to_owned(),
+                                                                    hex::decode(&b[32..48]).to_owned(),
+                                                                    hex::decode(&b[48..64]).to_owned()];
+                        for bb in str_tmp.iter() {
+                            if bb.is_ok() {
+                                let c = bb.as_ref().unwrap().clone();
+                                bytes.push(transform_bytes_to_u64(&c));
+                            }
+                        }
                     } else {
                         break;
                     }
                 }
 
                 let mut byte_slice: [u64; 4] = [0; 4];
-                if (bytes.len() == 4) {
+                if bytes.len() == 4 {
                     // let to_err = |_| DeserializeError::custom(ERR_CODE);
                     byte_slice.copy_from_slice(&bytes[0..4]);
                 }
@@ -218,13 +230,68 @@ impl<'de> Deserialize<'de> for Fq {
 
 impl Serialize for FqRepr {
     fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
-        self.0.serialize(s)
+        // self.0.serialize(s)
+        let r = self.0;
+        let len = r.as_ref().len();
+        let mut tup = s.serialize_tuple(1)?;
+        let mut v = String::new();
+        for byte in r.as_ref() {
+            let byte_array = transform_u64_to_array_of_u8(*byte);
+            let hex_str = hex::encode(&byte_array);
+            // tup.serialize_element(&hex_str);
+            v += &hex_str;
+        }
+        tup.serialize_element(&v);
+        tup.end()
     }
 }
 
 impl<'de> Deserialize<'de> for FqRepr {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-        Ok(FqRepr(<_>::deserialize(d)?))
+        struct FqReprTupleVisitor;
+
+        impl<'de> Visitor<'de> for FqReprTupleVisitor {
+            type Value = FqRepr;
+
+            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "sequence of bytes representing FqRepr element")
+            }
+
+            #[inline]
+            fn visit_seq<A: SeqAccess<'de>>(self, mut seq: A) -> Result<Self::Value, A::Error> {
+                let mut bytes: Vec<u64> = Vec::new();
+                loop {
+                    let tmp = seq.next_element::<String>();
+                    if let Ok(Some(b)) = tmp {
+                        // TODO: error handling for len
+                        let str_tmp= [hex::decode(&b[0..16]).to_owned(),
+                                                                    hex::decode(&b[16..32]).to_owned(),
+                                                                    hex::decode(&b[32..48]).to_owned(),
+                                                                    hex::decode(&b[48..64]).to_owned(),
+                                                                    hex::decode(&b[64..80]).to_owned(),
+                                                                    hex::decode(&b[80..96]).to_owned()];
+                        for bb in str_tmp.iter() {
+                            if bb.is_ok() {
+                                let c = bb.as_ref().unwrap().clone();
+                                bytes.push(transform_bytes_to_u64(&c));
+                            }
+                        }
+                    } else {
+                        break;
+                    }
+                }
+
+                let mut byte_slice: [u64; 6] = [0; 6];
+                if bytes.len() == 6 {
+                    // let to_err = |_| DeserializeError::custom(ERR_CODE);
+                    byte_slice.copy_from_slice(&bytes[0..6]);
+                }
+                Ok(FqRepr(byte_slice))
+            }
+        }
+
+        //Ok(FqRepr(<_>::deserialize(d)?))
+        d.deserialize_seq(FqReprTupleVisitor {})
     }
 }
 
