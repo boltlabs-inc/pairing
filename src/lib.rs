@@ -12,7 +12,7 @@
 #![deny(missing_debug_implementations)]
 
 extern crate byteorder;
-extern crate ff;
+extern crate ff_bl as ff;
 extern crate rand;
 extern crate rand_xorshift;
 
