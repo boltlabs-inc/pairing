@@ -304,7 +304,8 @@ mod tests {
 
     use std::fmt::Debug;
 
-    use rand::{Rng, SeedableRng, XorShiftRng};
+    use rand::{Rng, SeedableRng};
+    use rand_xorshift::XorShiftRng;
 
     fn test_roundtrip<T: Serialize + for<'a> Deserialize<'a> + Debug + PartialEq>(t: &T) {
         let ser = serde_json::to_vec(t).unwrap();

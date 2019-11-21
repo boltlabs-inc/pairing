@@ -25,6 +25,7 @@ extern crate hex;
 pub mod tests;
 
 pub mod bls12_381;
+pub mod bn256;
 
 mod wnaf;
 pub use self::wnaf::Wnaf;
