@@ -202,7 +202,9 @@ macro_rules! curve_impl {
                         let p = p.scale_by_cofactor();
 
                         if !p.is_zero() {
-                            return p;
+                            if p.into_affine().is_on_curve() {
+                                return p;
+                            }
                         }
                     }
                 }
@@ -1566,7 +1568,7 @@ pub mod g2 {
     #[test]
     fn test_addition_and_doubling() {
     
-    let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
+        let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
 
         for _ in 0..1000 {
             let a = G2::rand(&mut rng);
