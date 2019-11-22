@@ -267,9 +267,9 @@ impl<'de> Deserialize<'de> for FqRepr {
                         let str_tmp= [hex::decode(&b[0..16]).to_owned(),
                                                                     hex::decode(&b[16..32]).to_owned(),
                                                                     hex::decode(&b[32..48]).to_owned(),
-                                                                    hex::decode(&b[48..64]).to_owned(),
-                                                                    hex::decode(&b[64..80]).to_owned(),
-                                                                    hex::decode(&b[80..96]).to_owned()];
+                                                                    hex::decode(&b[48..64]).to_owned()];
+//                                                                    hex::decode(&b[64..80]).to_owned(),
+//                                                                    hex::decode(&b[80..96]).to_owned()];
                         for bb in str_tmp.iter() {
                             if bb.is_ok() {
                                 let c = bb.as_ref().unwrap().clone();
@@ -281,10 +281,10 @@ impl<'de> Deserialize<'de> for FqRepr {
                     }
                 }
 
-                let mut byte_slice: [u64; 6] = [0; 6];
-                if bytes.len() == 6 {
+                let mut byte_slice: [u64; 4] = [0; 4];
+                if bytes.len() == 4 {
                     // let to_err = |_| DeserializeError::custom(ERR_CODE);
-                    byte_slice.copy_from_slice(&bytes[0..6]);
+                    byte_slice.copy_from_slice(&bytes[0..4]);
                 }
                 Ok(FqRepr(byte_slice))
             }

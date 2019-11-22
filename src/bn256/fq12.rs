@@ -6,6 +6,7 @@ use rand::Rng;
 
 /// An element of Fq12, represented by c0 + c1 * w.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Fq12 {
     pub c0: Fq6,
     pub c1: Fq6,
@@ -23,6 +24,12 @@ impl Rand for Fq12 {
             c0: rng.gen(),
             c1: rng.gen(),
         }
+    }
+}
+
+impl ::rand::distributions::Distribution<Fq12> for ::rand::distributions::Standard {
+    fn sample<R: ::rand::Rng + ?Sized>(&self, rng: &mut R) -> Fq12 {
+        Fq12::rand(rng)
     }
 }
 
