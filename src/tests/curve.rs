@@ -361,9 +361,9 @@ fn random_transformation_tests<G: CurveProjective>() {
     for _ in 0..10 {
         let mut v = (0..1000).map(|_| G::rand(&mut rng)).collect::<Vec<_>>();
 
-        for i in &v {
-            assert!(!i.is_normalized());
-        }
+//        for i in &v {
+//            assert!(!i.is_normalized());
+//        }
 
         //use rand::distributions::{IndependentSample, Range};
         //let between = Range::new(0, 1000);
