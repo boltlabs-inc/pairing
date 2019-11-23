@@ -175,7 +175,10 @@ impl Field for Fq12 {
 }
 
 #[cfg(test)]
-use rand::{SeedableRng, XorShiftRng};
+use rand::SeedableRng;
+
+#[cfg(test)]
+use rand_xorshift::XorShiftRng;
 
 #[test]
 fn test_fq12_mul_by_014() {

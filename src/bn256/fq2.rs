@@ -940,7 +940,9 @@ fn test_fq2_legendre() {
 
 #[cfg(test)]
 use rand::{SeedableRng};
-use rand_xorshift::{XorShiftRng};
+
+#[cfg(test)]
+use rand_xorshift::XorShiftRng;
 
 #[test]
 fn test_fq2_mul_nonresidue() {

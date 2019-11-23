@@ -60,7 +60,7 @@ impl<'de> Deserialize<'de> for G2Affine {
 
 /// Serializes a group element using its compressed representation.
 fn serialize_affine<S: Serializer, C: CurveAffine>(c: &C, s: S) -> Result<S::Ok, S::Error> {
-    let len = C::Compressed::size();
+    let _len = C::Compressed::size();
     let mut w = String::new();
     for byte in c.into_compressed().as_ref() {
         let t = format!("{:02x}", byte);
@@ -155,16 +155,14 @@ impl Serialize for FrRepr {
     fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
         // self.0.serialize(s)
         let r = self.0;
-        let len = r.as_ref().len();
         let mut tup = s.serialize_tuple(1)?;
         let mut v = String::new();
         for byte in r.as_ref() {
             let byte_array = transform_u64_to_array_of_u8(*byte);
             let hex_str = hex::encode(&byte_array);
-            // tup.serialize_element(&hex_str);
             v += &hex_str;
         }
-        tup.serialize_element(&v);
+        tup.serialize_element(&v)?;
         tup.end()
     }
 }
@@ -232,16 +230,14 @@ impl Serialize for FqRepr {
     fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
         // self.0.serialize(s)
         let r = self.0;
-        let len = r.as_ref().len();
         let mut tup = s.serialize_tuple(1)?;
         let mut v = String::new();
         for byte in r.as_ref() {
             let byte_array = transform_u64_to_array_of_u8(*byte);
             let hex_str = hex::encode(&byte_array);
-            // tup.serialize_element(&hex_str);
             v += &hex_str;
         }
-        tup.serialize_element(&v);
+        tup.serialize_element(&v)?;
         tup.end()
     }
 }
@@ -268,8 +264,6 @@ impl<'de> Deserialize<'de> for FqRepr {
                                                                     hex::decode(&b[16..32]).to_owned(),
                                                                     hex::decode(&b[32..48]).to_owned(),
                                                                     hex::decode(&b[48..64]).to_owned()];
-//                                                                    hex::decode(&b[64..80]).to_owned(),
-//                                                                    hex::decode(&b[80..96]).to_owned()];
                         for bb in str_tmp.iter() {
                             if bb.is_ok() {
                                 let c = bb.as_ref().unwrap().clone();

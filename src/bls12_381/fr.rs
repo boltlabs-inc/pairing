@@ -6,7 +6,9 @@ use ff::{Field, PrimeField, PrimeFieldDecodingError, PrimeFieldRepr, Rand};
 pub struct Fr(FrRepr);
 
 #[cfg(test)]
-use rand::{SeedableRng};
+use rand::SeedableRng;
+
+#[cfg(test)]
 use rand_xorshift::XorShiftRng;
 
 #[test]

@@ -1,7 +1,7 @@
 use ff::{Field, Rand};
-use rand::{Rng, SeedableRng};
+use rand::SeedableRng;
 use rand_xorshift::XorShiftRng;
-use rand::distributions::Standard;
+//use rand::distributions::Standard;
 
 use {CurveAffine, CurveProjective, EncodedPoint};
 

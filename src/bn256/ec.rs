@@ -1506,6 +1506,8 @@ pub mod g2 {
 
     #[cfg(test)]
     use rand::SeedableRng;
+
+    #[cfg(test)]
     use rand_xorshift::XorShiftRng;
 
     #[test]

@@ -1,4 +1,4 @@
-use ff::{Rand, Field, LegendreSymbol, PrimeField, SqrtField};
+use ff::{Field, LegendreSymbol, PrimeField, SqrtField};
 use rand::{Rng, SeedableRng};
 use rand_xorshift::XorShiftRng;
 

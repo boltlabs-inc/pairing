@@ -310,8 +310,10 @@ impl Field for Fq6 {
 }
 
 #[cfg(test)]
-use rand::{SeedableRng};
-use rand_xorshift::{XorShiftRng};
+use rand::SeedableRng;
+
+#[cfg(test)]
+use rand_xorshift::XorShiftRng;
 
 #[test]
 fn test_fq6_mul_nonresidue() {
