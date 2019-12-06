@@ -2,7 +2,7 @@
 name = "pairing_bl"
 
 # Remember to change version string in README.md.
-version = "0.14.4"
+version = "0.14.5"
 authors = [
     "Sean Bowe <ewillbefull@gmail.com>",
     "Jack Grigg <jack@z.cash>",
@@ -15,7 +15,7 @@ homepage = "https://github.com/ebfull/pairing"
 repository = "https://github.com/ebfull/pairing"
 
 [dependencies]
-rand = "0.6"
+rand = "0.7"
 rand_xorshift = "0.1"
 byteorder = "1"
 hex = "0.3.2"
