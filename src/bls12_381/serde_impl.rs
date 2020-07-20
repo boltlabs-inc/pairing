@@ -1,7 +1,7 @@
+use super::{Fq, FqRepr, Fr, FrRepr, G1Affine, G2Affine, G1, G2};
+use hex;
 use std::fmt;
 use std::marker::PhantomData;
-use hex;
-use super::{Fq, FqRepr, Fr, FrRepr, G1Affine, G2Affine, G1, G2};
 use {CurveAffine, CurveProjective, EncodedPoint, PrimeField};
 
 use serde::de::{Error as DeserializeError, SeqAccess, Visitor};
@@ -96,7 +96,8 @@ fn deserialize_affine<'de, D: Deserializer<'de>, C: CurveAffine>(d: D) -> Result
 
         #[inline]
         fn visit_str<E>(self, v: &str) -> Result<C, E>
-            where E: ::serde::de::Error,
+        where
+            E: ::serde::de::Error,
         {
             let mut compressed = C::Compressed::empty();
             let _len = C::Compressed::size();
@@ -110,28 +111,27 @@ fn deserialize_affine<'de, D: Deserializer<'de>, C: CurveAffine>(d: D) -> Result
             let to_err = |_| DeserializeError::custom(ERR_CODE);
             compressed.into_affine().map_err(to_err)
         }
-
     }
 
-    d.deserialize_str(TupleVisitor{ _ph: PhantomData })
+    d.deserialize_str(TupleVisitor { _ph: PhantomData })
 }
 
-fn transform_u64_to_array_of_u8(x: u64) -> [u8;8] {
-    let b1 : u8 = ((x >> 56) & 0xff) as u8;
-    let b2 : u8 = ((x >> 48) & 0xff) as u8;
-    let b3 : u8 = ((x >> 40) & 0xff) as u8;
-    let b4 : u8 = ((x >> 32) & 0xff) as u8;
-    let b5 : u8 = ((x >> 24) & 0xff) as u8;
-    let b6 : u8 = ((x >> 16) & 0xff) as u8;
-    let b7 : u8 = ((x >> 8) & 0xff) as u8;
-    let b8 : u8 = (x & 0xff) as u8;
-    return [b1, b2, b3, b4, b5, b6, b7, b8]
+fn transform_u64_to_array_of_u8(x: u64) -> [u8; 8] {
+    let b1: u8 = ((x >> 56) & 0xff) as u8;
+    let b2: u8 = ((x >> 48) & 0xff) as u8;
+    let b3: u8 = ((x >> 40) & 0xff) as u8;
+    let b4: u8 = ((x >> 32) & 0xff) as u8;
+    let b5: u8 = ((x >> 24) & 0xff) as u8;
+    let b6: u8 = ((x >> 16) & 0xff) as u8;
+    let b7: u8 = ((x >> 8) & 0xff) as u8;
+    let b8: u8 = (x & 0xff) as u8;
+    return [b1, b2, b3, b4, b5, b6, b7, b8];
 }
 
 fn transform_bytes_to_u64(x: &Vec<u8>) -> u64 {
     let mut u: u64 = 0;
     let len = x.len() - 1;
-    for i in 0 .. 8 {
+    for i in 0..8 {
         let t: u64 = (x[len - i] as u64) << (i * 8);
         u += t;
     }
@@ -158,7 +158,8 @@ impl Serialize for FrRepr {
         let mut tup = s.serialize_tuple(1)?;
         let mut v = String::new();
         for byte in r.as_ref() {
-            let byte_array = transform_u64_to_array_of_u8(*byte);
+            let mut byte_array = transform_u64_to_array_of_u8(*byte);
+            byte_array.reverse(); // preserve little endian encoding
             let hex_str = hex::encode(&byte_array);
             v += &hex_str;
         }
@@ -185,13 +186,16 @@ impl<'de> Deserialize<'de> for FrRepr {
                     let tmp = seq.next_element::<String>();
                     if let Ok(Some(b)) = tmp {
                         // TODO: error handling for len
-                        let str_tmp= [hex::decode(&b[0..16]).to_owned(),
-                                                                    hex::decode(&b[16..32]).to_owned(),
-                                                                    hex::decode(&b[32..48]).to_owned(),
-                                                                    hex::decode(&b[48..64]).to_owned()];
+                        let str_tmp = [
+                            hex::decode(&b[0..16]).to_owned(),
+                            hex::decode(&b[16..32]).to_owned(),
+                            hex::decode(&b[32..48]).to_owned(),
+                            hex::decode(&b[48..64]).to_owned(),
+                        ];
                         for bb in str_tmp.iter() {
                             if bb.is_ok() {
-                                let c = bb.as_ref().unwrap().clone();
+                                let mut c = bb.as_ref().unwrap().clone();
+                                c.reverse(); 
                                 bytes.push(transform_bytes_to_u64(&c));
                             }
                         }
@@ -260,12 +264,14 @@ impl<'de> Deserialize<'de> for FqRepr {
                     let tmp = seq.next_element::<String>();
                     if let Ok(Some(b)) = tmp {
                         // TODO: error handling for len
-                        let str_tmp= [hex::decode(&b[0..16]).to_owned(),
-                                                                    hex::decode(&b[16..32]).to_owned(),
-                                                                    hex::decode(&b[32..48]).to_owned(),
-                                                                    hex::decode(&b[48..64]).to_owned(),
-                                                                    hex::decode(&b[64..80]).to_owned(),
-                                                                    hex::decode(&b[80..96]).to_owned()];
+                        let str_tmp = [
+                            hex::decode(&b[0..16]).to_owned(),
+                            hex::decode(&b[16..32]).to_owned(),
+                            hex::decode(&b[32..48]).to_owned(),
+                            hex::decode(&b[48..64]).to_owned(),
+                            hex::decode(&b[64..80]).to_owned(),
+                            hex::decode(&b[80..96]).to_owned(),
+                        ];
                         for bb in str_tmp.iter() {
                             if bb.is_ok() {
                                 let c = bb.as_ref().unwrap().clone();
