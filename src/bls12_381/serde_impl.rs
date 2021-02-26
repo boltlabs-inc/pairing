@@ -5,9 +5,8 @@ use std::marker::PhantomData;
 use {CurveAffine, CurveProjective, EncodedPoint, PrimeField};
 
 use serde::de::{Error as DeserializeError, SeqAccess, Visitor};
-use serde::ser::{SerializeTuple, SerializeSeq};
+use serde::ser::SerializeTuple;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use ff::Field;
 
 const ERR_CODE: &str = "deserialized bytes do not encode a group element";
 
