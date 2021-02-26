@@ -453,7 +453,6 @@ mod tests {
     fn serde_fq12() {
         let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
         let f: Fq12 = rng.gen();
-        println!("{:?}", serde_json::to_string(&f).unwrap());
         test_roundtrip(&f);
     }
 }
