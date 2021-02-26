@@ -1,12 +1,13 @@
-use super::{Fq, FqRepr, Fr, FrRepr, G1Affine, G2Affine, G1, G2};
+use super::{Fq, FqRepr, Fq12, Fq6, Fq2, Fr, FrRepr, G1Affine, G2Affine, G1, G2};
 use hex;
 use std::fmt;
 use std::marker::PhantomData;
 use {CurveAffine, CurveProjective, EncodedPoint, PrimeField};
 
 use serde::de::{Error as DeserializeError, SeqAccess, Visitor};
-use serde::ser::SerializeTuple;
+use serde::ser::{SerializeTuple, SerializeSeq};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use ff::Field;
 
 const ERR_CODE: &str = "deserialized bytes do not encode a group element";
 
@@ -297,12 +298,109 @@ impl<'de> Deserialize<'de> for FqRepr {
     }
 }
 
+impl Serialize for Fq12 {
+    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        let string121 = serialize_fq_repr(self.c1.c2.c1.into_repr()).to_owned();
+        let string120 = serialize_fq_repr(self.c1.c2.c0.into_repr());
+        let string111 = serialize_fq_repr(self.c1.c1.c1.into_repr());
+        let string110 = serialize_fq_repr(self.c1.c1.c0.into_repr());
+        let string101 = serialize_fq_repr(self.c1.c0.c1.into_repr());
+        let string100 = serialize_fq_repr(self.c1.c0.c0.into_repr());
+        let string021 = serialize_fq_repr(self.c0.c2.c1.into_repr());
+        let string020 = serialize_fq_repr(self.c0.c2.c0.into_repr());
+        let string011 = serialize_fq_repr(self.c0.c1.c1.into_repr());
+        let string010 = serialize_fq_repr(self.c0.c1.c0.into_repr());
+        let string001 = serialize_fq_repr(self.c0.c0.c1.into_repr());
+        let string000 = serialize_fq_repr(self.c0.c0.c0.into_repr());
+        let string = string121 + string120.as_str() + string111.as_str() + string110.as_str()
+            + string101.as_str() + string100.as_str() + string021.as_str()
+            + string020.as_str() + string011.as_str() + string010.as_str()
+            + string001.as_str() + string000.as_str();
+        s.serialize_str(&string)
+    }
+}
+
+fn serialize_fq_repr(r: FqRepr) -> String {
+    let mut out = format!("{}", r);
+    out.remove(0);
+    out.remove(0);
+    out
+}
+
+impl<'de> Deserialize<'de> for Fq12 {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        struct Fq12StringVisitor;
+
+        impl<'de> Visitor<'de> for Fq12StringVisitor {
+            type Value = Fq12;
+
+            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "sequence of bytes representing Fq12 element")
+            }
+
+            #[inline]
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E> {
+                let c121 = deserialize_fq(&v[..96]);
+                let c120 = deserialize_fq(&v[96..192]);
+                let c111 = deserialize_fq(&v[192..288]);
+                let c110 = deserialize_fq(&v[288..384]);
+                let c101 = deserialize_fq(&v[384..480]);
+                let c100 = deserialize_fq(&v[480..576]);
+                let c021 = deserialize_fq(&v[576..672]);
+                let c020 = deserialize_fq(&v[672..768]);
+                let c011 = deserialize_fq(&v[768..864]);
+                let c010 = deserialize_fq(&v[864..960]);
+                let c001 = deserialize_fq(&v[960..1056]);
+                let c000 = deserialize_fq(&v[1056..1152]);
+
+                Ok(Fq12{
+                    c0: Fq6{
+                        c0: Fq2{c0: c000, c1: c001},
+                        c1: Fq2{c0: c010, c1: c011},
+                        c2: Fq2{c0: c020, c1: c021}},
+                    c1: Fq6{
+                        c0: Fq2{c0: c100, c1: c101},
+                        c1: Fq2{c0: c110, c1: c111},
+                        c2: Fq2{c0: c120, c1: c121}}
+                })
+            }
+        }
+        d.deserialize_str(Fq12StringVisitor {})
+    }
+}
+
+fn deserialize_fq(v: &str) -> Fq {
+    let mut bytes: Vec<u64> = Vec::new();
+    let str_tmp = [
+        hex::decode(&v[80..96]).to_owned(),
+        hex::decode(&v[64..80]).to_owned(),
+        hex::decode(&v[48..64]).to_owned(),
+        hex::decode(&v[32..48]).to_owned(),
+        hex::decode(&v[16..32]).to_owned(),
+        hex::decode(&v[0..16]).to_owned(),
+    ];
+    for bb in str_tmp.iter() {
+        if bb.is_ok() {
+            let c = bb.as_ref().unwrap().clone();
+            let mut c_array: [u8; 8] = [0; 8];
+            c_array.clone_from_slice(c.as_slice());
+            bytes.push(u64::from_be_bytes(c_array));
+        }
+    }
+
+    let mut bytes_array: [u64; 6] = [0; 6];
+    bytes_array.clone_from_slice(bytes.as_slice());
+
+
+    Fq::from_repr(FqRepr(bytes_array)).unwrap()
+}
+
+
 #[cfg(test)]
 mod tests {
     extern crate serde_json;
 
     use super::*;
-    use bls12_381::Fq12;
 
     use std::fmt::Debug;
 
@@ -356,6 +454,7 @@ mod tests {
     fn serde_fq12() {
         let mut rng = XorShiftRng::seed_from_u64(0x5dbe62598d313d76);
         let f: Fq12 = rng.gen();
+        println!("{:?}", serde_json::to_string(&f).unwrap());
         test_roundtrip(&f);
     }
 }
