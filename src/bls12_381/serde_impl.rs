@@ -5,7 +5,6 @@ use std::marker::PhantomData;
 use {CurveAffine, CurveProjective, EncodedPoint, PrimeField};
 
 use serde::de::{Error as DeserializeError, SeqAccess, Visitor};
-use serde::ser::SerializeTuple;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 const ERR_CODE: &str = "deserialized bytes do not encode a group element";
@@ -96,8 +95,8 @@ fn deserialize_affine<'de, D: Deserializer<'de>, C: CurveAffine>(d: D) -> Result
 
         #[inline]
         fn visit_str<E>(self, v: &str) -> Result<C, E>
-        where
-            E: ::serde::de::Error,
+            where
+                E: ::serde::de::Error,
         {
             let mut compressed = C::Compressed::empty();
             let _len = C::Compressed::size();
@@ -155,7 +154,6 @@ impl Serialize for FrRepr {
     fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
         // self.0.serialize(s)
         let r = self.0;
-        let mut tup = s.serialize_tuple(1)?;
         let mut v = String::new();
         for byte in r.as_ref() {
             let mut byte_array = transform_u64_to_array_of_u8(*byte);
@@ -163,8 +161,7 @@ impl Serialize for FrRepr {
             let hex_str = hex::encode(&byte_array);
             v += &hex_str;
         }
-        tup.serialize_element(&v)?;
-        tup.end()
+        s.serialize_str(&v)
     }
 }
 
@@ -180,17 +177,17 @@ impl<'de> Deserialize<'de> for FrRepr {
             }
 
             #[inline]
-            fn visit_seq<A: SeqAccess<'de>>(self, mut seq: A) -> Result<Self::Value, A::Error> {
-                let mut bytes: Vec<u64> = Vec::new();
-                loop {
-                    let tmp = seq.next_element::<String>();
-                    if let Ok(Some(b)) = tmp {
-                        // TODO: error handling for len
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+                where E: ::serde::de::Error,
+            {
+                match v.len() == 64 {
+                    true => {
+                        let mut bytes: Vec<u64> = Vec::new();
                         let str_tmp = [
-                            hex::decode(&b[0..16]).to_owned(),
-                            hex::decode(&b[16..32]).to_owned(),
-                            hex::decode(&b[32..48]).to_owned(),
-                            hex::decode(&b[48..64]).to_owned(),
+                            hex::decode(&v[0..16]).to_owned(),
+                            hex::decode(&v[16..32]).to_owned(),
+                            hex::decode(&v[32..48]).to_owned(),
+                            hex::decode(&v[48..64]).to_owned(),
                         ];
                         for bb in str_tmp.iter() {
                             if bb.is_ok() {
@@ -199,22 +196,19 @@ impl<'de> Deserialize<'de> for FrRepr {
                                 bytes.push(transform_bytes_to_u64(&c));
                             }
                         }
-                    } else {
-                        break;
-                    }
-                }
 
-                let mut byte_slice: [u64; 4] = [0; 4];
-                if bytes.len() == 4 {
-                    // let to_err = |_| DeserializeError::custom(ERR_CODE);
-                    byte_slice.copy_from_slice(&bytes[0..4]);
+                        let mut byte_slice: [u64; 4] = [0; 4];
+                        if bytes.len() == 4 {
+                            // let to_err = |_| DeserializeError::custom(ERR_CODE);
+                            byte_slice.copy_from_slice(&bytes[0..4]);
+                        }
+                        Ok(FrRepr(byte_slice))
+                    }
+                    false => return Err(serde::de::Error::custom("invalid length: expected 64 bytes")),
                 }
-                Ok(FrRepr(byte_slice))
             }
         }
-
-        //Ok(FrRepr(<_>::deserialize(d)?))
-        d.deserialize_seq(FrReprTupleVisitor {})
+        d.deserialize_str(FrReprTupleVisitor {})
     }
 }
 
@@ -234,15 +228,13 @@ impl Serialize for FqRepr {
     fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
         // self.0.serialize(s)
         let r = self.0;
-        let mut tup = s.serialize_tuple(1)?;
         let mut v = String::new();
         for byte in r.as_ref() {
             let byte_array = transform_u64_to_array_of_u8(*byte);
             let hex_str = hex::encode(&byte_array);
             v += &hex_str;
         }
-        tup.serialize_element(&v)?;
-        tup.end()
+        s.serialize_str(&v)
     }
 }
 
@@ -258,19 +250,19 @@ impl<'de> Deserialize<'de> for FqRepr {
             }
 
             #[inline]
-            fn visit_seq<A: SeqAccess<'de>>(self, mut seq: A) -> Result<Self::Value, A::Error> {
-                let mut bytes: Vec<u64> = Vec::new();
-                loop {
-                    let tmp = seq.next_element::<String>();
-                    if let Ok(Some(b)) = tmp {
-                        // TODO: error handling for len
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+                where E: ::serde::de::Error,
+            {
+                match v.len() == 96 {
+                    true => {
+                        let mut bytes: Vec<u64> = Vec::new();
                         let str_tmp = [
-                            hex::decode(&b[0..16]).to_owned(),
-                            hex::decode(&b[16..32]).to_owned(),
-                            hex::decode(&b[32..48]).to_owned(),
-                            hex::decode(&b[48..64]).to_owned(),
-                            hex::decode(&b[64..80]).to_owned(),
-                            hex::decode(&b[80..96]).to_owned(),
+                            hex::decode(&v[0..16]).to_owned(),
+                            hex::decode(&v[16..32]).to_owned(),
+                            hex::decode(&v[32..48]).to_owned(),
+                            hex::decode(&v[48..64]).to_owned(),
+                            hex::decode(&v[64..80]).to_owned(),
+                            hex::decode(&v[80..96]).to_owned(),
                         ];
                         for bb in str_tmp.iter() {
                             if bb.is_ok() {
@@ -278,22 +270,19 @@ impl<'de> Deserialize<'de> for FqRepr {
                                 bytes.push(transform_bytes_to_u64(&c));
                             }
                         }
-                    } else {
-                        break;
-                    }
-                }
 
-                let mut byte_slice: [u64; 6] = [0; 6];
-                if bytes.len() == 6 {
-                    // let to_err = |_| DeserializeError::custom(ERR_CODE);
-                    byte_slice.copy_from_slice(&bytes[0..6]);
+                        let mut byte_slice: [u64; 6] = [0; 6];
+                        if bytes.len() == 6 {
+                            // let to_err = |_| DeserializeError::custom(ERR_CODE);
+                            byte_slice.copy_from_slice(&bytes[0..6]);
+                        }
+                        Ok(FqRepr(byte_slice))
+                    }
+                    false => return Err(serde::de::Error::custom("invalid length: expected 96 bytes")),
                 }
-                Ok(FqRepr(byte_slice))
             }
         }
-
-        //Ok(FqRepr(<_>::deserialize(d)?))
-        d.deserialize_seq(FqReprTupleVisitor {})
+        d.deserialize_str(FqReprTupleVisitor {})
     }
 }
 
@@ -338,30 +327,39 @@ impl<'de> Deserialize<'de> for Fq12 {
             }
 
             #[inline]
-            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E> {
-                let c121 = deserialize_fq(&v[..96]);
-                let c120 = deserialize_fq(&v[96..192]);
-                let c111 = deserialize_fq(&v[192..288]);
-                let c110 = deserialize_fq(&v[288..384]);
-                let c101 = deserialize_fq(&v[384..480]);
-                let c100 = deserialize_fq(&v[480..576]);
-                let c021 = deserialize_fq(&v[576..672]);
-                let c020 = deserialize_fq(&v[672..768]);
-                let c011 = deserialize_fq(&v[768..864]);
-                let c010 = deserialize_fq(&v[864..960]);
-                let c001 = deserialize_fq(&v[960..1056]);
-                let c000 = deserialize_fq(&v[1056..1152]);
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+                where E: ::serde::de::Error,
+            {
+                match v.len() == 1152 {
+                    true => {
+                        let c121 = deserialize_fq(&v[..96]);
+                        let c120 = deserialize_fq(&v[96..192]);
+                        let c111 = deserialize_fq(&v[192..288]);
+                        let c110 = deserialize_fq(&v[288..384]);
+                        let c101 = deserialize_fq(&v[384..480]);
+                        let c100 = deserialize_fq(&v[480..576]);
+                        let c021 = deserialize_fq(&v[576..672]);
+                        let c020 = deserialize_fq(&v[672..768]);
+                        let c011 = deserialize_fq(&v[768..864]);
+                        let c010 = deserialize_fq(&v[864..960]);
+                        let c001 = deserialize_fq(&v[960..1056]);
+                        let c000 = deserialize_fq(&v[1056..1152]);
 
-                Ok(Fq12{
-                    c0: Fq6{
-                        c0: Fq2{c0: c000, c1: c001},
-                        c1: Fq2{c0: c010, c1: c011},
-                        c2: Fq2{c0: c020, c1: c021}},
-                    c1: Fq6{
-                        c0: Fq2{c0: c100, c1: c101},
-                        c1: Fq2{c0: c110, c1: c111},
-                        c2: Fq2{c0: c120, c1: c121}}
-                })
+                        Ok(Fq12 {
+                            c0: Fq6 {
+                                c0: Fq2 { c0: c000, c1: c001 },
+                                c1: Fq2 { c0: c010, c1: c011 },
+                                c2: Fq2 { c0: c020, c1: c021 },
+                            },
+                            c1: Fq6 {
+                                c0: Fq2 { c0: c100, c1: c101 },
+                                c1: Fq2 { c0: c110, c1: c111 },
+                                c2: Fq2 { c0: c120, c1: c121 },
+                            },
+                        })
+                    }
+                    false => return Err(serde::de::Error::custom("invalid length: expected 1152 bytes")),
+                }
             }
         }
         d.deserialize_str(Fq12StringVisitor {})
@@ -393,7 +391,6 @@ fn deserialize_fq(v: &str) -> Fq {
 
     Fq::from_repr(FqRepr(bytes_array)).unwrap()
 }
-
 
 #[cfg(test)]
 mod tests {
